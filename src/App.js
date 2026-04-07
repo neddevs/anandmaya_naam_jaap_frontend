@@ -20,6 +20,7 @@ const THEME = {
 };
 
 function App() {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
   const [authMode, setAuthMode] = useState('login');
   const [authData, setAuthData] = useState({ name: '', email: '', password: '' });
@@ -37,7 +38,13 @@ function App() {
 
   const names = ['Ram', 'Radha', 'Krishna', 'Shiva', 'Durga', 'Hanuman', 'Ganesh', 'Others'];
   const timerRef = useRef(null);
-  const audioRef = useRef(new Audio('./audio/bird.mp3'));
+  const audioRef = useRef(new Audio('/audio/bird.mp3'));
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleBackgroundMusic = () => {
     audioRef.current.loop = true;
@@ -117,8 +124,8 @@ function App() {
     <nav style={styles.navbar}>
       <div style={styles.navLeft}>Anandmaya</div>
       <div style={styles.navRight}>
-        <a href="#more" style={styles.navLink}>See More</a>
-        <a href="#contact" style={styles.navLink}>Contact</a>
+        {windowWidth > 600 && <a href="#more" style={styles.navLink}>See More</a>}
+        {windowWidth > 600 && <a href="#contact" style={styles.navLink}>Contact</a>}
         {user && <button onClick={() => { localStorage.removeItem('user'); setUser(null); }} style={styles.logoutBtn}><LogOut size={16} /> Logout</button>}
       </div>
     </nav>
@@ -160,7 +167,7 @@ function App() {
 
       <div style={styles.contentWrapper}>
         <div style={styles.greetingRow}>
-          <div style={styles.greetingText}>Pranam, {user.name} 𖤓</div>
+          <div style={styles.greetingText}>Pranam, {user.name}</div>
         </div>
 
         <header style={styles.header}>
@@ -168,7 +175,12 @@ function App() {
           <p style={styles.subHeader}>Your spiritual chanting companion</p>
         </header>
 
-        <main style={styles.dashboardGrid}>
+        <main style={{
+          ...styles.dashboardGrid,
+          gridTemplateColumns: windowWidth > 1024 ? '1fr 1.3fr' : '1fr'
+        }}>
+
+          {/* LEFT COLUMN */}
           <section style={styles.gridColumn}>
             {!isActive ? (
               <motion.div style={styles.standardBox}>
@@ -208,7 +220,7 @@ function App() {
                 <img src="/anandmaya_logo.png" alt="Logo" style={styles.feedbackLogo} />
                 <div>
                   <p style={styles.feedbackText}>Tell us how we can improve your spiritual journey.</p>
-                  <p style={{ marginTop: '10px', fontFamily: THEME.fontText, fontWeight: 500 }}>
+                  <p style={{ marginTop: '10px', fontFamily: THEME.fontText, fontSize: '16px', fontWeight: 500 }}>
                     Mail to: <a href="mailto:info@anandmaya.com" style={styles.emailLink}>info@anandmaya.com</a>
                   </p>
                 </div>
@@ -216,6 +228,7 @@ function App() {
             </div>
           </section>
 
+          {/* RIGHT COLUMN */}
           <section style={styles.gridColumn}>
             <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><BarChart3 size={18} /> Chanting Statistics</h3>
@@ -234,7 +247,7 @@ function App() {
               </div>
             </div>
 
-            <div style={{ ...styles.standardBox, marginTop: '40px' }}>
+            <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><CalIcon size={18} /> Daily Chanting Summary</h3>
               <div style={styles.summaryContainer}>
                 <div style={styles.calendarMini}><Calendar onChange={setSelectedDate} value={selectedDate} maxDate={new Date()} /></div>
@@ -258,67 +271,65 @@ function App() {
 }
 
 const styles = {
-  appContainer: { minHeight: '100vh', backgroundColor: THEME.bg, display: 'flex', flexDirection: 'column' },
-  navbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', backgroundColor: THEME.navbar, borderRadius: '15px', margin: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' },
+  appContainer: { minHeight: '100vh', backgroundColor: THEME.bg, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' },
+  navbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 25px', backgroundColor: THEME.navbar, borderRadius: '15px', margin: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' },
   navLeft: { fontFamily: THEME.fontHeading, fontSize: '2.2rem', fontWeight: 700, color: THEME.textBrown },
   navRight: { display: 'flex', gap: '25px', alignItems: 'center' },
   navLink: { textDecoration: 'none', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500, fontSize: '14px' },
   logoutBtn: { backgroundColor: 'transparent', border: `1px solid ${THEME.primary}`, padding: '6px 15px', borderRadius: '8px', cursor: 'pointer', fontFamily: THEME.fontText, fontWeight: 600, color: THEME.primary, display: 'flex', alignItems: 'center', gap: '5px' },
 
-  footer: { backgroundColor: THEME.navbar, borderRadius: '15px', padding: '15px', margin: '20px 15px', textAlign: 'center', fontFamily: THEME.fontText, fontSize: '13px', fontWeight: 500, color: THEME.textBrown, boxShadow: '0 -4px 10px rgba(0,0,0,0.02)' },
+  footer: { backgroundColor: THEME.navbar, borderRadius: '15px', padding: '15px', margin: '30px 15px 15px 15px', textAlign: 'center', fontFamily: THEME.fontText, fontSize: '13px', fontWeight: 500, color: THEME.textBrown, boxShadow: '0 -4px 10px rgba(0,0,0,0.02)' },
 
   authWrapper: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-  authCard: { backgroundColor: 'white', padding: '60px', borderRadius: '40px', width: '100%', maxWidth: '520px', textAlign: 'center', boxShadow: '0 20px 60px rgba(128,64,0,0.08)' },
-  authTitle: { fontFamily: THEME.fontHeading, fontSize: '4rem', color: THEME.primary, marginBottom: '5px', fontWeight: 700 },
+  authCard: { backgroundColor: 'white', padding: '40px', borderRadius: '40px', width: '100%', maxWidth: '520px', textAlign: 'center', boxShadow: '0 20px 60px rgba(128,64,0,0.08)', boxSizing: 'border-box' },
+  authTitle: { fontFamily: THEME.fontHeading, fontSize: '3.5rem', color: THEME.primary, marginBottom: '5px', fontWeight: 700 },
   authForm: { display: 'flex', flexDirection: 'column', gap: '20px' },
   inputGroup: { display: 'flex', alignItems: 'center', gap: '15px', border: '1px solid #eee', padding: '5px 20px', borderRadius: '18px', backgroundColor: '#fafafa' },
   modernInput: { border: 'none', backgroundColor: 'transparent', padding: '15px 0', width: '100%', outline: 'none', fontFamily: THEME.fontText, fontSize: '16px', fontWeight: 500 },
   toggleAuth: { marginTop: '30px', color: THEME.primary, cursor: 'pointer', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '15px' },
 
-  contentWrapper: { maxWidth: '1250px', margin: '0 auto', padding: '0 20px', flex: 1, width: '100%' },
-
-  // GREETING UPDATED: Halfway on the left side, correct font.
+  contentWrapper: { maxWidth: '1250px', margin: '0 auto', padding: '0 20px', flex: 1, width: '100%', boxSizing: 'border-box' },
   greetingRow: { display: 'flex', justifyContent: 'flex-start', width: '100%' },
-  greetingText: { paddingLeft: '80px', fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, marginBottom: '10px' },
+  greetingText: { width: '50%', textAlign: 'left', fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, marginBottom: '10px', paddingLeft: '10px' },
 
   header: { textAlign: 'center', marginBottom: '50px' },
-  mainTitle: { fontFamily: THEME.fontHeading, fontSize: '4.5rem', margin: 0, fontWeight: 700, color: THEME.textBrown },
-  subHeader: { fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, opacity: 0.6 },
+  mainTitle: { fontFamily: THEME.fontHeading, fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', margin: 0, fontWeight: 700, color: THEME.textBrown },
+  subHeader: { fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.1rem', color: THEME.textBrown, opacity: 0.6 },
 
-  dashboardGrid: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '40px', alignItems: 'stretch' },
-  gridColumn: { display: 'flex', flexDirection: 'column', gap: '35px' },
+  dashboardGrid: { display: 'grid', gap: '30px', alignItems: 'stretch' },
+  gridColumn: { display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' },
 
-  standardBox: { backgroundColor: THEME.card, padding: '35px', borderRadius: '35px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', flex: 1 },
+  standardBox: { backgroundColor: THEME.card, padding: 'clamp(20px, 5vw, 35px)', borderRadius: '35px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box' },
   cardHeading: { fontFamily: THEME.fontHeading, fontSize: '2.5rem', color: THEME.primary, marginBottom: '25px', fontWeight: 700 },
-  nameGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '30px' },
-  nameBadge: { padding: '14px', borderRadius: '14px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontWeight: 600, fontSize: '15px', fontFamily: THEME.fontText },
+  nameGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '30px' },
+  nameBadge: { padding: '14px 5px', borderRadius: '14px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontWeight: 600, fontSize: 'clamp(11px, 2.5vw, 15px)', fontFamily: THEME.fontText },
   primaryBtn: { width: '100%', padding: '18px', backgroundColor: THEME.primary, color: 'white', border: 'none', borderRadius: '18px', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' },
 
-  feedbackContent: { display: 'flex', alignItems: 'center', gap: '25px', marginTop: '10px' },
+  feedbackContent: { display: 'flex', alignItems: 'center', gap: '20px', marginTop: '10px', flexWrap: 'wrap' },
   feedbackLogo: { width: '100px', height: '100px', borderRadius: '20px', objectFit: 'cover' },
   feedbackText: { fontSize: '16px', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500 },
   emailLink: { color: THEME.primary, fontWeight: 600, textDecoration: 'underline' },
 
   sectionTitle: { fontFamily: THEME.fontHeading, fontSize: '2rem', color: THEME.primary, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700 },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', flexGrow: 1 },
-  whiteStatCard: { backgroundColor: 'white', padding: '25px', borderRadius: '25px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: THEME.fontText },
-  rangeBox: { display: 'flex', gap: '12px', marginTop: '25px' },
-  rangeBtn: { flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: THEME.fontText },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', flexGrow: 1 },
+  whiteStatCard: { backgroundColor: 'white', padding: '20px 10px', borderRadius: '25px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+  rangeBox: { display: 'flex', gap: '8px', marginTop: '25px', flexWrap: 'wrap' },
+  rangeBtn: { flex: 1, minWidth: '70px', padding: '10px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '12px', fontWeight: 600, fontFamily: THEME.fontText },
 
-  summaryContainer: { display: 'flex', gap: '25px', flexWrap: 'wrap', flexGrow: 1 },
-  calendarMini: { flex: 1.2, minWidth: '280px', backgroundColor: 'white', padding: '15px', borderRadius: '20px' },
-  dayStats: { display: 'flex', flexDirection: 'column', gap: '15px', flex: 0.8 },
+  summaryContainer: { display: 'flex', gap: '20px', flexWrap: 'wrap', flexGrow: 1 },
+  calendarMini: { flex: 1.2, minWidth: '100%', maxWidth: '100%', backgroundColor: 'white', padding: '10px', borderRadius: '20px', boxSizing: 'border-box' },
+  dayStats: { display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, width: '100%' },
 
-  activeZone: { textAlign: 'center', backgroundColor: THEME.card, padding: '40px', borderRadius: '35px' },
+  activeZone: { textAlign: 'center', backgroundColor: THEME.card, padding: '30px 15px', borderRadius: '35px' },
   activeHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', color: THEME.primary },
   stopBtn: { padding: '10px 20px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, backgroundColor: 'transparent', color: THEME.primary, cursor: 'pointer', fontWeight: 600 },
-  counterCircleWrapper: { position: 'relative', height: '320px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  bigCircle: { width: '260px', height: '260px', borderRadius: '50%', backgroundColor: 'white', border: `10px solid ${THEME.bg}`, boxShadow: '0 20px 50px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
-  bigCount: { fontSize: '85px', fontWeight: 700, color: THEME.primary, fontFamily: THEME.fontText },
-  label: { fontSize: '13px', fontWeight: 600, letterSpacing: '2px', color: THEME.primary, opacity: 0.5, fontFamily: THEME.fontText },
-  popup: { position: 'absolute', fontSize: '3rem', fontWeight: 700, pointerEvents: 'none', fontFamily: THEME.fontHeading, color: THEME.primary },
-  timerDisplay: { marginTop: '25px', fontSize: '1.8rem', fontWeight: 600, color: THEME.primary, fontFamily: THEME.fontText },
-  musicToggle: { position: 'fixed', bottom: '40px', right: '40px', backgroundColor: 'white', border: 'none', padding: '18px', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 5px 20px rgba(0,0,0,0.15)', zIndex: 100 }
+  counterCircleWrapper: { position: 'relative', height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  bigCircle: { width: 'min(260px, 70vw)', height: 'min(260px, 70vw)', borderRadius: '50%', backgroundColor: 'white', border: `10px solid ${THEME.bg}`, boxShadow: '0 20px 50px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
+  bigCount: { fontSize: 'clamp(50px, 15vw, 85px)', fontWeight: 700, color: THEME.primary },
+  label: { fontSize: '13px', fontWeight: 600, letterSpacing: '2px', color: THEME.primary, opacity: 0.5 },
+  popup: { position: 'absolute', fontSize: 'clamp(2rem, 8vw, 3.5rem)', fontWeight: 700, pointerEvents: 'none', fontFamily: THEME.fontHeading, color: THEME.primary },
+  timerDisplay: { marginTop: '25px', fontSize: '1.8rem', fontWeight: 600, color: THEME.primary },
+  musicToggle: { position: 'fixed', bottom: '25px', right: '25px', backgroundColor: 'white', border: 'none', padding: '15px', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 5px 20px rgba(0,0,0,0.15)', zIndex: 100 }
 };
 
 export default App;
