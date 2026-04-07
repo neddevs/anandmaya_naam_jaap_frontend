@@ -11,7 +11,7 @@ const API_URL = "http://localhost:5000/api";
 const THEME = {
   bg: "#fff5e6",
   navbar: "#ffffff",
-  card: "#fffbe6", // Lightest Yellow for all Boxes
+  card: "#fffbe6",
   textBrown: "#5c2e00",
   primary: "#804000",
   accent: "#a0522d",
@@ -62,8 +62,6 @@ function App() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setRealStats(res.data);
-
-      // Fetch Today specifically for the new "Today's Journey" box
       const today = moment().format('YYYY-MM-DD');
       const todayRes = await axios.get(`${API_URL}/sessions/daily-stats?date=${today}`, {
         headers: { Authorization: `Bearer ${user.token}` }
@@ -115,7 +113,6 @@ function App() {
     } catch (e) { console.error(e); }
   };
 
-  // COMMON NAVBAR COMPONENT
   const Navigation = () => (
     <nav style={styles.navbar}>
       <div style={styles.navLeft}>Anandmaya</div>
@@ -127,7 +124,6 @@ function App() {
     </nav>
   );
 
-  // COMMON FOOTER COMPONENT
   const Footer = () => (
     <footer style={styles.footer}>
       © 2026 Anandmaya Naam Jaap. All Rights Reserved.
@@ -164,7 +160,7 @@ function App() {
 
       <div style={styles.contentWrapper}>
         <div style={styles.greetingRow}>
-          <div style={styles.greetingText}>Pranam, {user.name}</div>
+          <div style={styles.greetingText}>Pranam, {user.name} 𖤓</div>
         </div>
 
         <header style={styles.header}>
@@ -173,8 +169,6 @@ function App() {
         </header>
 
         <main style={styles.dashboardGrid}>
-
-          {/* LEFT COLUMN */}
           <section style={styles.gridColumn}>
             {!isActive ? (
               <motion.div style={styles.standardBox}>
@@ -200,7 +194,6 @@ function App() {
               </div>
             )}
 
-            {/* TODAY'S JOURNEY */}
             <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><Sun size={18} /> Today's Journey</h3>
               <div style={styles.statsGrid}>
@@ -209,14 +202,13 @@ function App() {
               </div>
             </div>
 
-            {/* FEEDBACK BOX */}
             <div style={styles.standardBox}>
               <h3 style={{ ...styles.sectionTitle, fontSize: '2rem' }}><MessageSquare size={22} /> Feedback & Support</h3>
               <div style={styles.feedbackContent}>
                 <img src="/anandmaya_logo.png" alt="Logo" style={styles.feedbackLogo} />
                 <div>
                   <p style={styles.feedbackText}>Tell us how we can improve your spiritual journey.</p>
-                  <p style={{ marginTop: '10px' }}>
+                  <p style={{ marginTop: '10px', fontFamily: THEME.fontText, fontWeight: 500 }}>
                     Mail to: <a href="mailto:info@anandmaya.com" style={styles.emailLink}>info@anandmaya.com</a>
                   </p>
                 </div>
@@ -224,7 +216,6 @@ function App() {
             </div>
           </section>
 
-          {/* RIGHT COLUMN */}
           <section style={styles.gridColumn}>
             <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><BarChart3 size={18} /> Chanting Statistics</h3>
@@ -285,8 +276,10 @@ const styles = {
   toggleAuth: { marginTop: '30px', color: THEME.primary, cursor: 'pointer', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '15px' },
 
   contentWrapper: { maxWidth: '1250px', margin: '0 auto', padding: '0 20px', flex: 1, width: '100%' },
-  greetingRow: { display: 'flex', justifyContent: 'center', width: '100%' },
-  greetingText: { width: '85%', textAlign: 'right', fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, marginBottom: '10px' },
+
+  // GREETING UPDATED: Halfway on the left side, correct font.
+  greetingRow: { display: 'flex', justifyContent: 'flex-start', width: '100%' },
+  greetingText: { paddingLeft: '80px', fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, marginBottom: '10px' },
 
   header: { textAlign: 'center', marginBottom: '50px' },
   mainTitle: { fontFamily: THEME.fontHeading, fontSize: '4.5rem', margin: 0, fontWeight: 700, color: THEME.textBrown },
@@ -308,7 +301,7 @@ const styles = {
 
   sectionTitle: { fontFamily: THEME.fontHeading, fontSize: '2rem', color: THEME.primary, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700 },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', flexGrow: 1 },
-  whiteStatCard: { backgroundColor: 'white', padding: '25px', borderRadius: '25px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+  whiteStatCard: { backgroundColor: 'white', padding: '25px', borderRadius: '25px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: THEME.fontText },
   rangeBox: { display: 'flex', gap: '12px', marginTop: '25px' },
   rangeBtn: { flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: THEME.fontText },
 
@@ -321,10 +314,10 @@ const styles = {
   stopBtn: { padding: '10px 20px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, backgroundColor: 'transparent', color: THEME.primary, cursor: 'pointer', fontWeight: 600 },
   counterCircleWrapper: { position: 'relative', height: '320px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   bigCircle: { width: '260px', height: '260px', borderRadius: '50%', backgroundColor: 'white', border: `10px solid ${THEME.bg}`, boxShadow: '0 20px 50px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
-  bigCount: { fontSize: '85px', fontWeight: 700, color: THEME.primary },
-  label: { fontSize: '13px', fontWeight: 600, letterSpacing: '2px', color: THEME.primary, opacity: 0.5 },
+  bigCount: { fontSize: '85px', fontWeight: 700, color: THEME.primary, fontFamily: THEME.fontText },
+  label: { fontSize: '13px', fontWeight: 600, letterSpacing: '2px', color: THEME.primary, opacity: 0.5, fontFamily: THEME.fontText },
   popup: { position: 'absolute', fontSize: '3rem', fontWeight: 700, pointerEvents: 'none', fontFamily: THEME.fontHeading, color: THEME.primary },
-  timerDisplay: { marginTop: '25px', fontSize: '1.8rem', fontWeight: 600, color: THEME.primary },
+  timerDisplay: { marginTop: '25px', fontSize: '1.8rem', fontWeight: 600, color: THEME.primary, fontFamily: THEME.fontText },
   musicToggle: { position: 'fixed', bottom: '40px', right: '40px', backgroundColor: 'white', border: 'none', padding: '18px', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 5px 20px rgba(0,0,0,0.15)', zIndex: 100 }
 };
 
