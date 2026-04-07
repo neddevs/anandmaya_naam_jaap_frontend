@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Play, Square, Trophy, History, Clock, Volume2, VolumeX, BarChart3, User, LogOut, Lock, Mail, Calendar as CalIcon, MessageSquare } from 'lucide-react';
+import { Play, Square, Trophy, History, Clock, Volume2, VolumeX, BarChart3, User, LogOut, Lock, Mail, Calendar as CalIcon, MessageSquare, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import moment from 'moment';
 import Calendar from 'react-calendar';
@@ -10,11 +10,11 @@ const API_URL = "http://localhost:5000/api";
 
 const THEME = {
   bg: "#fff5e6",
-  card: "#ffffff",
-  statsCardBg: "#fffbe6", // Lightest Yellow for Stats/Daily Summary
-  textBrown: "#5c2e00",//dark brown 
-  primary: "#804000",//light brown for font
-  accent: "#a0522d",//lightest brown
+  navbar: "#ffffff",
+  card: "#fffbe6", // Lightest Yellow for all Boxes
+  textBrown: "#5c2e00",
+  primary: "#804000",
+  accent: "#a0522d",
   fontHeading: "'Cormorant Garamond', serif",
   fontText: "'Inter', sans-serif",
 };
@@ -33,10 +33,11 @@ function App() {
   const [realStats, setRealStats] = useState({ totalChants: 0, sessions: 0, totalTime: 0, avg: 0 });
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyStats, setDailyStats] = useState({ totalChants: 0, sessions: 0, avg: 0 });
+  const [todayStats, setTodayStats] = useState({ totalChants: 0, sessions: 0 });
 
   const names = ['Ram', 'Radha', 'Krishna', 'Shiva', 'Durga', 'Hanuman', 'Ganesh', 'Others'];
   const timerRef = useRef(null);
-  const audioRef = useRef(new Audio('/audio/bird.mp3'));
+  const audioRef = useRef(new Audio('./audio/bird.mp3'));
 
   const toggleBackgroundMusic = () => {
     audioRef.current.loop = true;
@@ -61,6 +62,13 @@ function App() {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setRealStats(res.data);
+
+      // Fetch Today specifically for the new "Today's Journey" box
+      const today = moment().format('YYYY-MM-DD');
+      const todayRes = await axios.get(`${API_URL}/sessions/daily-stats?date=${today}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setTodayStats(todayRes.data);
     } catch (e) { console.error(e); }
   };
 
@@ -107,58 +115,76 @@ function App() {
     } catch (e) { console.error(e); }
   };
 
+  // COMMON NAVBAR COMPONENT
+  const Navigation = () => (
+    <nav style={styles.navbar}>
+      <div style={styles.navLeft}>Anandmaya</div>
+      <div style={styles.navRight}>
+        <a href="#more" style={styles.navLink}>See More</a>
+        <a href="#contact" style={styles.navLink}>Contact</a>
+        {user && <button onClick={() => { localStorage.removeItem('user'); setUser(null); }} style={styles.logoutBtn}><LogOut size={16} /> Logout</button>}
+      </div>
+    </nav>
+  );
+
+  // COMMON FOOTER COMPONENT
+  const Footer = () => (
+    <footer style={styles.footer}>
+      © 2026 Anandmaya Naam Jaap. All Rights Reserved.
+    </footer>
+  );
+
   if (!user) {
     return (
-      <div style={{ ...styles.appContainer, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={styles.authCard}>
-          <h1 style={styles.authTitle}>{authMode === 'login' ? 'Login' : 'Sign Up'}</h1>
-          <p style={{ fontFamily: THEME.fontText, opacity: 0.6, marginBottom: '20px' }}>Access your spiritual dashboard</p>
-          <form onSubmit={handleAuth} style={styles.authForm}>
-            {authMode === 'signup' && <div style={styles.inputGroup}><User size={18} color={THEME.primary} /><input style={styles.modernInput} placeholder="Name" onChange={e => setAuthData({ ...authData, name: e.target.value })} required /></div>}
-            <div style={styles.inputGroup}><Mail size={18} color={THEME.primary} /><input style={styles.modernInput} type="email" placeholder="Email Address" onChange={e => setAuthData({ ...authData, email: e.target.value })} required /></div>
-            <div style={styles.inputGroup}><Lock size={18} color={THEME.primary} /><input style={styles.modernInput} type="password" placeholder="Password" onChange={e => setAuthData({ ...authData, password: e.target.value })} required /></div>
-            <button type="submit" style={styles.primaryBtn}>{authMode === 'login' ? 'Enter Dashboard' : 'Join Now'}</button>
-          </form>
-          <p onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} style={styles.toggleAuth}>
-            {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
-          </p>
-        </motion.div>
+      <div style={styles.appContainer}>
+        <Navigation />
+        <div style={styles.authWrapper}>
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={styles.authCard}>
+            <h1 style={styles.authTitle}>Login</h1>
+            <p style={{ fontFamily: THEME.fontText, opacity: 0.6, marginBottom: '25px', fontWeight: 500 }}>Access your spiritual dashboard</p>
+            <form onSubmit={handleAuth} style={styles.authForm}>
+              {authMode === 'signup' && <div style={styles.inputGroup}><User size={18} color={THEME.primary} /><input style={styles.modernInput} placeholder="Name" onChange={e => setAuthData({ ...authData, name: e.target.value })} required /></div>}
+              <div style={styles.inputGroup}><Mail size={18} color={THEME.primary} /><input style={styles.modernInput} type="email" placeholder="Email Address" onChange={e => setAuthData({ ...authData, email: e.target.value })} required /></div>
+              <div style={styles.inputGroup}><Lock size={18} color={THEME.primary} /><input style={styles.modernInput} type="password" placeholder="Password" onChange={e => setAuthData({ ...authData, password: e.target.value })} required /></div>
+              <button type="submit" style={styles.primaryBtn}>Enter Dashboard</button>
+            </form>
+            <p onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} style={styles.toggleAuth}>
+              {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+            </p>
+          </motion.div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
     <div style={styles.appContainer}>
-      {/* NAVBAR */}
-      <nav style={styles.navbar}>
-        <div style={styles.navLeft}>Anandmaya</div>
-        <div style={styles.navRight}>
-          <a href="#more" style={styles.navLink}>See More</a>
-          <a href="#contact" style={styles.navLink}>Contact</a>
-          <button onClick={() => { localStorage.removeItem('user'); setUser(null); }} style={styles.logoutBtn}><LogOut size={16} /> Logout</button>
-        </div>
-      </nav>
+      <Navigation />
 
       <div style={styles.contentWrapper}>
-        <div style={styles.greeting}>Pranam, {user.name}</div>
+        <div style={styles.greetingRow}>
+          <div style={styles.greetingText}>Pranam, {user.name}</div>
+        </div>
+
         <header style={styles.header}>
-          <h1 style={styles.mainTitle}>📿 Naam Jaap Counter</h1>
+          <h1 style={styles.mainTitle}>Naam Jaap Counter</h1>
           <p style={styles.subHeader}>Your spiritual chanting companion</p>
         </header>
 
-        <main style={{ ...styles.main, flexDirection: window.innerWidth > 1024 ? 'row' : 'column' }}>
+        <main style={styles.dashboardGrid}>
 
-          {/* LEFT SIDE: SESSIONS & FEEDBACK */}
-          <section style={{ ...styles.column, flex: 1 }}>
+          {/* LEFT COLUMN */}
+          <section style={styles.gridColumn}>
             {!isActive ? (
-              <motion.div style={styles.sessionCard}>
+              <motion.div style={styles.standardBox}>
                 <h2 style={styles.cardHeading}>Start New Session</h2>
                 <div style={styles.nameGrid}>
                   {names.map(n => (
                     <button key={n} onClick={() => setDivineName(n)} style={{ ...styles.nameBadge, backgroundColor: divineName === n ? THEME.primary : 'white', color: divineName === n ? 'white' : THEME.textBrown }}>{n}</button>
                   ))}
                 </div>
-                <button onClick={() => { setCount(0); setIsActive(true); }} style={styles.primaryBtn}><Play size={18} fill="white" /> Start Session</button>
+                <button onClick={() => { setCount(0); setIsActive(true); }} style={{ ...styles.primaryBtn, marginTop: 'auto' }}><Play size={18} fill="white" /> Start Session</button>
               </motion.div>
             ) : (
               <div style={styles.activeZone}>
@@ -174,40 +200,57 @@ function App() {
               </div>
             )}
 
+            {/* TODAY'S JOURNEY */}
+            <div style={styles.standardBox}>
+              <h3 style={styles.sectionTitle}><Sun size={18} /> Today's Journey</h3>
+              <div style={styles.statsGrid}>
+                <div style={styles.whiteStatCard}><h4>{todayStats.totalChants}</h4><p>Chants Today</p></div>
+                <div style={styles.whiteStatCard}><h4>{todayStats.sessions}</h4><p>Sessions Today</p></div>
+              </div>
+            </div>
+
             {/* FEEDBACK BOX */}
-            <div style={styles.feedbackBox}>
-              <div style={styles.feedbackHeader}><MessageSquare size={18} color={THEME.primary} /> <span>Feedback & Support</span></div>
+            <div style={styles.standardBox}>
+              <h3 style={{ ...styles.sectionTitle, fontSize: '2rem' }}><MessageSquare size={22} /> Feedback & Support</h3>
               <div style={styles.feedbackContent}>
                 <img src="/anandmaya_logo.png" alt="Logo" style={styles.feedbackLogo} />
-                <p style={{ fontSize: '13px', color: THEME.textBrown }}>Tell us how we can improve your spiritual journey.</p>
+                <div>
+                  <p style={styles.feedbackText}>Tell us how we can improve your spiritual journey.</p>
+                  <p style={{ marginTop: '10px' }}>
+                    Mail to: <a href="mailto:info@anandmaya.com" style={styles.emailLink}>info@anandmaya.com</a>
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* RIGHT SIDE: STATS & SUMMARY */}
-          <section style={{ ...styles.column, flex: 1.3 }}>
-            <div style={styles.statsPanel}>
+          {/* RIGHT COLUMN */}
+          <section style={styles.gridColumn}>
+            <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><BarChart3 size={18} /> Chanting Statistics</h3>
               <div style={styles.statsGrid}>
-                <div style={styles.statCard}><h4>{realStats.totalChants}</h4><p>Total Chants</p></div>
-                <div style={styles.statCard}><h4>{realStats.sessions}</h4><p>Total Sessions</p></div>
-                <div style={styles.statCard}><h4>{Math.floor(realStats.totalTime / 60)}m</h4><p>Total Time</p></div>
-                <div style={styles.statCard}><h4>{Math.round(realStats.avg)}</h4><p>Avg Jaap</p></div>
+                <div style={styles.whiteStatCard}><h4>{realStats.totalChants}</h4><p>Total Chants</p></div>
+                <div style={styles.whiteStatCard}><h4>{realStats.sessions}</h4><p>Total Sessions</p></div>
+                <div style={styles.whiteStatCard}><h4>{Math.floor(realStats.totalTime / 60)}m</h4><p>Total Time</p></div>
+                <div style={styles.whiteStatCard}><h4>{Math.round(realStats.avg)}</h4><p>Avg Jaap</p></div>
               </div>
               <div style={styles.rangeBox}>
                 {[7, 30, 90, 365].map(r => (
-                  <button key={r} onClick={() => setViewRange(r)} style={{ ...styles.rangeBtn, backgroundColor: viewRange === r ? THEME.primary : 'white', color: viewRange === r ? 'white' : THEME.textBrown }}>{r}D</button>
+                  <button key={r} onClick={() => setViewRange(r)} style={{ ...styles.rangeBtn, backgroundColor: viewRange === r ? THEME.primary : 'white', color: viewRange === r ? 'white' : THEME.textBrown }}>
+                    {r === 365 ? '1 Year' : `${r} Days`}
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div style={{ ...styles.statsPanel, marginTop: '25px' }}>
+            <div style={{ ...styles.standardBox, marginTop: '40px' }}>
               <h3 style={styles.sectionTitle}><CalIcon size={18} /> Daily Chanting Summary</h3>
               <div style={styles.summaryContainer}>
                 <div style={styles.calendarMini}><Calendar onChange={setSelectedDate} value={selectedDate} maxDate={new Date()} /></div>
                 <div style={styles.dayStats}>
-                  <div style={styles.dayStatItem}><strong>{dailyStats.totalChants}</strong> <p>Chants</p></div>
-                  <div style={styles.dayStatItem}><strong>{dailyStats.sessions}</strong> <p>Sessions</p></div>
+                  <div style={styles.whiteStatCard}><strong>{dailyStats.totalChants}</strong> <p>Chants</p></div>
+                  <div style={styles.whiteStatCard}><strong>{dailyStats.sessions}</strong> <p>Sessions</p></div>
+                  <div style={styles.whiteStatCard}><strong>{Math.round(dailyStats.avg || 0)}</strong> <p>Average</p></div>
                 </div>
               </div>
             </div>
@@ -215,6 +258,7 @@ function App() {
         </main>
       </div>
 
+      <Footer />
       <button onClick={toggleBackgroundMusic} style={styles.musicToggle}>
         {isAudioEnabled ? <Volume2 color={THEME.primary} /> : <VolumeX color={THEME.primary} />}
       </button>
@@ -223,62 +267,65 @@ function App() {
 }
 
 const styles = {
-  appContainer: { minHeight: '100vh', backgroundColor: THEME.bg, paddingBottom: '50px' },
-  navbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', backgroundColor: 'transparent' },
+  appContainer: { minHeight: '100vh', backgroundColor: THEME.bg, display: 'flex', flexDirection: 'column' },
+  navbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', backgroundColor: THEME.navbar, borderRadius: '15px', margin: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' },
   navLeft: { fontFamily: THEME.fontHeading, fontSize: '2.2rem', fontWeight: 700, color: THEME.textBrown },
   navRight: { display: 'flex', gap: '25px', alignItems: 'center' },
   navLink: { textDecoration: 'none', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500, fontSize: '14px' },
   logoutBtn: { backgroundColor: 'transparent', border: `1px solid ${THEME.primary}`, padding: '6px 15px', borderRadius: '8px', cursor: 'pointer', fontFamily: THEME.fontText, fontWeight: 600, color: THEME.primary, display: 'flex', alignItems: 'center', gap: '5px' },
 
-  contentWrapper: { maxWidth: '1150px', margin: '0 auto', padding: '0 20px' },
-  greeting: { fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.1rem', color: THEME.textBrown, marginBottom: '5px' },
-  header: { marginBottom: '40px' },
-  mainTitle: { fontFamily: THEME.fontHeading, fontSize: '3.5rem', margin: 0, fontWeight: 700, color: THEME.textBrown },
-  subHeader: { fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1rem', color: THEME.textBrown, opacity: 0.6 },
+  footer: { backgroundColor: THEME.navbar, borderRadius: '15px', padding: '15px', margin: '20px 15px', textAlign: 'center', fontFamily: THEME.fontText, fontSize: '13px', fontWeight: 500, color: THEME.textBrown, boxShadow: '0 -4px 10px rgba(0,0,0,0.02)' },
 
-  main: { display: 'flex', gap: '40px', alignItems: 'flex-start' },
-  column: { width: '100%' },
+  authWrapper: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
+  authCard: { backgroundColor: 'white', padding: '60px', borderRadius: '40px', width: '100%', maxWidth: '520px', textAlign: 'center', boxShadow: '0 20px 60px rgba(128,64,0,0.08)' },
+  authTitle: { fontFamily: THEME.fontHeading, fontSize: '4rem', color: THEME.primary, marginBottom: '5px', fontWeight: 700 },
+  authForm: { display: 'flex', flexDirection: 'column', gap: '20px' },
+  inputGroup: { display: 'flex', alignItems: 'center', gap: '15px', border: '1px solid #eee', padding: '5px 20px', borderRadius: '18px', backgroundColor: '#fafafa' },
+  modernInput: { border: 'none', backgroundColor: 'transparent', padding: '15px 0', width: '100%', outline: 'none', fontFamily: THEME.fontText, fontSize: '16px', fontWeight: 500 },
+  toggleAuth: { marginTop: '30px', color: THEME.primary, cursor: 'pointer', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '15px' },
 
-  authCard: { backgroundColor: 'white', padding: '50px', borderRadius: '40px', width: '100%', maxWidth: '480px', textAlign: 'center', boxShadow: '0 20px 60px rgba(128,64,0,0.08)' },
-  authTitle: { fontFamily: THEME.fontHeading, fontSize: '3.2rem', color: THEME.primary, marginBottom: '5px' },
-  authForm: { display: 'flex', flexDirection: 'column', gap: '18px' },
-  inputGroup: { display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #eee', padding: '4px 15px', borderRadius: '15px', backgroundColor: '#fafafa' },
-  modernInput: { border: 'none', backgroundColor: 'transparent', padding: '14px 0', width: '100%', outline: 'none', fontFamily: THEME.fontText, fontSize: '15px' },
-  toggleAuth: { marginTop: '25px', color: THEME.primary, cursor: 'pointer', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '14px' },
+  contentWrapper: { maxWidth: '1250px', margin: '0 auto', padding: '0 20px', flex: 1, width: '100%' },
+  greetingRow: { display: 'flex', justifyContent: 'center', width: '100%' },
+  greetingText: { width: '85%', textAlign: 'right', fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, marginBottom: '10px' },
 
-  sessionCard: { backgroundColor: 'white', padding: '30px', borderRadius: '28px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)', maxWidth: '400px', margin: '0 auto 25px auto' },
-  cardHeading: { fontFamily: THEME.fontHeading, fontSize: '2rem', color: THEME.primary, marginBottom: '20px' },
-  nameGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '25px' },
-  nameBadge: { padding: '10px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontWeight: 600, fontSize: '13px', fontFamily: THEME.fontText },
-  primaryBtn: { width: '100%', padding: '16px', backgroundColor: THEME.primary, color: 'white', border: 'none', borderRadius: '16px', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '1.05rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' },
+  header: { textAlign: 'center', marginBottom: '50px' },
+  mainTitle: { fontFamily: THEME.fontHeading, fontSize: '4.5rem', margin: 0, fontWeight: 700, color: THEME.textBrown },
+  subHeader: { fontFamily: THEME.fontText, fontWeight: 500, fontSize: '1.2rem', color: THEME.textBrown, opacity: 0.6 },
 
-  feedbackBox: { backgroundColor: 'white', padding: '25px', borderRadius: '25px', maxWidth: '400px', margin: '0 auto', boxShadow: '0 5px 15px rgba(0,0,0,0.02)' },
-  feedbackHeader: { display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: THEME.primary, marginBottom: '15px', fontFamily: THEME.fontText },
-  feedbackContent: { display: 'flex', alignItems: 'center', gap: '15px' },
-  feedbackLogo: { width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover' },
+  dashboardGrid: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '40px', alignItems: 'stretch' },
+  gridColumn: { display: 'flex', flexDirection: 'column', gap: '35px' },
 
-  statsPanel: { backgroundColor: THEME.statsCardBg, padding: '30px', borderRadius: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)' },
-  sectionTitle: { fontFamily: THEME.fontHeading, fontSize: '1.8rem', color: THEME.primary, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' },
-  statCard: { backgroundColor: 'white', padding: '20px', borderRadius: '20px', textAlign: 'center' },
-  rangeBox: { display: 'flex', gap: '10px', marginTop: '20px' },
-  rangeBtn: { flex: 1, padding: '10px', borderRadius: '10px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '12px', fontWeight: 600, fontFamily: THEME.fontText },
+  standardBox: { backgroundColor: THEME.card, padding: '35px', borderRadius: '35px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', flex: 1 },
+  cardHeading: { fontFamily: THEME.fontHeading, fontSize: '2.5rem', color: THEME.primary, marginBottom: '25px', fontWeight: 700 },
+  nameGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '30px' },
+  nameBadge: { padding: '14px', borderRadius: '14px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontWeight: 600, fontSize: '15px', fontFamily: THEME.fontText },
+  primaryBtn: { width: '100%', padding: '18px', backgroundColor: THEME.primary, color: 'white', border: 'none', borderRadius: '18px', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' },
 
-  summaryContainer: { display: 'flex', gap: '20px', flexWrap: 'wrap' },
-  calendarMini: { flex: 1, minWidth: '250px', backgroundColor: 'white', padding: '10px', borderRadius: '15px' },
-  dayStats: { display: 'flex', flexDirection: 'column', gap: '10px', flex: 0.6 },
-  dayStatItem: { backgroundColor: 'white', padding: '15px', borderRadius: '15px', textAlign: 'center' },
+  feedbackContent: { display: 'flex', alignItems: 'center', gap: '25px', marginTop: '10px' },
+  feedbackLogo: { width: '100px', height: '100px', borderRadius: '20px', objectFit: 'cover' },
+  feedbackText: { fontSize: '16px', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500 },
+  emailLink: { color: THEME.primary, fontWeight: 600, textDecoration: 'underline' },
 
-  activeZone: { textAlign: 'center', marginBottom: '30px' },
+  sectionTitle: { fontFamily: THEME.fontHeading, fontSize: '2rem', color: THEME.primary, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700 },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', flexGrow: 1 },
+  whiteStatCard: { backgroundColor: 'white', padding: '25px', borderRadius: '25px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+  rangeBox: { display: 'flex', gap: '12px', marginTop: '25px' },
+  rangeBtn: { flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: THEME.fontText },
+
+  summaryContainer: { display: 'flex', gap: '25px', flexWrap: 'wrap', flexGrow: 1 },
+  calendarMini: { flex: 1.2, minWidth: '280px', backgroundColor: 'white', padding: '15px', borderRadius: '20px' },
+  dayStats: { display: 'flex', flexDirection: 'column', gap: '15px', flex: 0.8 },
+
+  activeZone: { textAlign: 'center', backgroundColor: THEME.card, padding: '40px', borderRadius: '35px' },
   activeHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', color: THEME.primary },
-  stopBtn: { padding: '8px 16px', borderRadius: '10px', border: `1px solid ${THEME.primary}`, backgroundColor: 'transparent', color: THEME.primary, cursor: 'pointer', fontWeight: 600 },
-  counterCircleWrapper: { position: 'relative', height: '280px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  bigCircle: { width: '230px', height: '230px', borderRadius: '50%', backgroundColor: 'white', border: `8px solid ${THEME.bg}`, boxShadow: '0 15px 40px rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
-  bigCount: { fontSize: '70px', fontWeight: 700, color: THEME.primary },
-  label: { fontSize: '11px', fontWeight: 600, letterSpacing: '1px', color: THEME.primary, opacity: 0.5 },
-  popup: { position: 'absolute', fontSize: '2.5rem', fontWeight: 700, pointerEvents: 'none', fontFamily: THEME.fontHeading, color: THEME.primary },
-  timerDisplay: { marginTop: '20px', fontSize: '1.5rem', fontWeight: 600, color: THEME.primary },
-  musicToggle: { position: 'fixed', bottom: '30px', right: '30px', backgroundColor: 'white', border: 'none', padding: '15px', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 5px 15px rgba(0,0,0,0.1)', zIndex: 100 }
+  stopBtn: { padding: '10px 20px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, backgroundColor: 'transparent', color: THEME.primary, cursor: 'pointer', fontWeight: 600 },
+  counterCircleWrapper: { position: 'relative', height: '320px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  bigCircle: { width: '260px', height: '260px', borderRadius: '50%', backgroundColor: 'white', border: `10px solid ${THEME.bg}`, boxShadow: '0 20px 50px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
+  bigCount: { fontSize: '85px', fontWeight: 700, color: THEME.primary },
+  label: { fontSize: '13px', fontWeight: 600, letterSpacing: '2px', color: THEME.primary, opacity: 0.5 },
+  popup: { position: 'absolute', fontSize: '3rem', fontWeight: 700, pointerEvents: 'none', fontFamily: THEME.fontHeading, color: THEME.primary },
+  timerDisplay: { marginTop: '25px', fontSize: '1.8rem', fontWeight: 600, color: THEME.primary },
+  musicToggle: { position: 'fixed', bottom: '40px', right: '40px', backgroundColor: 'white', border: 'none', padding: '18px', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 5px 20px rgba(0,0,0,0.15)', zIndex: 100 }
 };
 
 export default App;
