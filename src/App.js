@@ -38,7 +38,7 @@ function App() {
 
   const names = ['Ram', 'Radha', 'Krishna', 'Shiva', 'Durga', 'Hanuman', 'Ganesh', 'Others'];
   const timerRef = useRef(null);
-  const audioRef = useRef(new Audio('/audio/bird.mp3'));
+  const audioRef = useRef(new Audio('./audio/bird.mp3'));
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -106,6 +106,12 @@ function App() {
     const id = Date.now();
     setPopups([...popups, { id, x: Math.random() * 60 - 30 }]);
     setTimeout(() => setPopups(prev => prev.filter(p => p.id !== id)), 800);
+  };
+
+  const startSession = () => {
+    setCount(0);
+    setElapsedTime(0);
+    setIsActive(true);
   };
 
   const stopSession = async () => {
@@ -180,7 +186,6 @@ function App() {
           gridTemplateColumns: windowWidth > 1024 ? '1fr 1.3fr' : '1fr'
         }}>
 
-          {/* LEFT COLUMN */}
           <section style={styles.gridColumn}>
             {!isActive ? (
               <motion.div style={styles.standardBox}>
@@ -190,7 +195,7 @@ function App() {
                     <button key={n} onClick={() => setDivineName(n)} style={{ ...styles.nameBadge, backgroundColor: divineName === n ? THEME.primary : 'white', color: divineName === n ? 'white' : THEME.textBrown }}>{n}</button>
                   ))}
                 </div>
-                <button onClick={() => { setCount(0); setIsActive(true); }} style={{ ...styles.primaryBtn, marginTop: 'auto' }}><Play size={18} fill="white" /> Start Session</button>
+                <button onClick={startSession} style={{ ...styles.primaryBtn, marginTop: 'auto' }}><Play size={18} fill="white" /> Start Session</button>
               </motion.div>
             ) : (
               <div style={styles.activeZone}>
@@ -215,12 +220,12 @@ function App() {
             </div>
 
             <div style={styles.standardBox}>
-              <h3 style={{ ...styles.sectionTitle, fontSize: '2rem' }}><MessageSquare size={22} /> Feedback & Support</h3>
+              <h3 style={styles.sectionTitle}><MessageSquare size={22} /> Feedback & Support</h3>
               <div style={styles.feedbackContent}>
                 <img src="/anandmaya_logo.png" alt="Logo" style={styles.feedbackLogo} />
-                <div>
+                <div style={styles.feedbackTextWrapper}>
                   <p style={styles.feedbackText}>Tell us how we can improve your spiritual journey.</p>
-                  <p style={{ marginTop: '10px', fontFamily: THEME.fontText, fontSize: '16px', fontWeight: 500 }}>
+                  <p style={styles.mailLine}>
                     Mail to: <a href="mailto:info@anandmaya.com" style={styles.emailLink}>info@anandmaya.com</a>
                   </p>
                 </div>
@@ -228,7 +233,6 @@ function App() {
             </div>
           </section>
 
-          {/* RIGHT COLUMN */}
           <section style={styles.gridColumn}>
             <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><BarChart3 size={18} /> Chanting Statistics</h3>
@@ -249,9 +253,12 @@ function App() {
 
             <div style={styles.standardBox}>
               <h3 style={styles.sectionTitle}><CalIcon size={18} /> Daily Chanting Summary</h3>
-              <div style={styles.summaryContainer}>
-                <div style={styles.calendarMini}><Calendar onChange={setSelectedDate} value={selectedDate} maxDate={new Date()} /></div>
-                <div style={styles.dayStats}>
+              <div style={{
+                ...styles.summaryContainer,
+                flexDirection: windowWidth > 650 ? 'row' : 'column'
+              }}>
+                <div style={styles.calendarMini}><Calendar onChange={setSelectedDate} value={selectedDate} maxDate={new Date()} minDate={moment().subtract(1, 'year').toDate()} /></div>
+                <div style={styles.dayStatsColumn}>
                   <div style={styles.whiteStatCard}><strong>{dailyStats.totalChants}</strong> <p>Chants</p></div>
                   <div style={styles.whiteStatCard}><strong>{dailyStats.sessions}</strong> <p>Sessions</p></div>
                   <div style={styles.whiteStatCard}><strong>{Math.round(dailyStats.avg || 0)}</strong> <p>Average</p></div>
@@ -299,15 +306,17 @@ const styles = {
   dashboardGrid: { display: 'grid', gap: '30px', alignItems: 'stretch' },
   gridColumn: { display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' },
 
-  standardBox: { backgroundColor: THEME.card, padding: 'clamp(20px, 5vw, 35px)', borderRadius: '35px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box' },
+  standardBox: { backgroundColor: THEME.card, padding: 'clamp(20px, 4vw, 35px)', borderRadius: '35px', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', flex: 1, boxSizing: 'border-box' },
   cardHeading: { fontFamily: THEME.fontHeading, fontSize: '2.5rem', color: THEME.primary, marginBottom: '25px', fontWeight: 700 },
   nameGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '30px' },
   nameBadge: { padding: '14px 5px', borderRadius: '14px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontWeight: 600, fontSize: 'clamp(11px, 2.5vw, 15px)', fontFamily: THEME.fontText },
   primaryBtn: { width: '100%', padding: '18px', backgroundColor: THEME.primary, color: 'white', border: 'none', borderRadius: '18px', fontWeight: 600, fontFamily: THEME.fontText, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' },
 
-  feedbackContent: { display: 'flex', alignItems: 'center', gap: '20px', marginTop: '10px', flexWrap: 'wrap' },
-  feedbackLogo: { width: '100px', height: '100px', borderRadius: '20px', objectFit: 'cover' },
-  feedbackText: { fontSize: '16px', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500 },
+  feedbackContent: { display: 'flex', alignItems: 'flex-start', gap: '25px', marginTop: '10px' },
+  feedbackLogo: { width: '120px', height: '120px', borderRadius: '25px', objectFit: 'cover' },
+  feedbackTextWrapper: { display: 'flex', flexDirection: 'column', gap: '15px' },
+  feedbackText: { fontSize: '18px', color: THEME.textBrown, fontFamily: THEME.fontText, fontWeight: 500, lineHeight: '1.5' },
+  mailLine: { fontSize: '18px', fontFamily: THEME.fontText, fontWeight: 500, margin: 0 },
   emailLink: { color: THEME.primary, fontWeight: 600, textDecoration: 'underline' },
 
   sectionTitle: { fontFamily: THEME.fontHeading, fontSize: '2rem', color: THEME.primary, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 700 },
@@ -316,9 +325,9 @@ const styles = {
   rangeBox: { display: 'flex', gap: '8px', marginTop: '25px', flexWrap: 'wrap' },
   rangeBtn: { flex: 1, minWidth: '70px', padding: '10px', borderRadius: '12px', border: `1px solid ${THEME.primary}`, cursor: 'pointer', fontSize: '12px', fontWeight: 600, fontFamily: THEME.fontText },
 
-  summaryContainer: { display: 'flex', gap: '20px', flexWrap: 'wrap', flexGrow: 1 },
-  calendarMini: { flex: 1.2, minWidth: '100%', maxWidth: '100%', backgroundColor: 'white', padding: '10px', borderRadius: '20px', boxSizing: 'border-box' },
-  dayStats: { display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, width: '100%' },
+  summaryContainer: { display: 'flex', gap: '20px', flexGrow: 1, alignItems: 'stretch' },
+  calendarMini: { flex: 1, backgroundColor: 'white', padding: '15px', borderRadius: '20px', boxSizing: 'border-box' },
+  dayStatsColumn: { display: 'flex', flexDirection: 'column', gap: '10px', flex: 0.4, justifyContent: 'space-between' },
 
   activeZone: { textAlign: 'center', backgroundColor: THEME.card, padding: '30px 15px', borderRadius: '35px' },
   activeHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', color: THEME.primary },
